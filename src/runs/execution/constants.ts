@@ -19,7 +19,8 @@ export const STATUS_POLL_INTERVAL = 5 * 1000;
 
 export const Agent = {
   BEE: 'bee',
-  STREAMLIT: 'streamlit'
+  STREAMLIT: 'streamlit',
+  LANGGRAPH: 'langgraph'
 } as const;
 export type Agent = (typeof Agent)[keyof typeof Agent];
 

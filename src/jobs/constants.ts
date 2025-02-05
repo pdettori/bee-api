@@ -22,6 +22,7 @@ export const QueueName = {
   VECTOR_STORES_FILE_PROCESSOR: 'vectorStores-fileProcessor',
   FILES_EXTRACTION_NODE: 'files-extraction-node',
   FILES_EXTRACTION_PYTHON: 'files-extraction-python',
-  FILES_CLEANUP: 'files-cleanup'
+  FILES_CLEANUP: 'files-cleanup',
+  RUNS_LANGGRAPH: 'runs-lg'
 } as const;
 export type QueueName = (typeof QueueName)[keyof typeof QueueName];

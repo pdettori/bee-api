@@ -25,6 +25,7 @@ import { RunReadParams, RunReadResponse } from './dtos/run-read.js';
 import { RunsListParams, RunsListQuery, RunsListResponse } from './dtos/runs-list.js';
 import { RunCancelParams, RunCancelResponse } from './dtos/run-cancel.js';
 import { queue } from './jobs/runs.queue.js';
+import { queue as lgqueue } from './jobs/runs-lg.queue.js';
 import { ThreadRunCreateBody, ThreadRunCreateResponse } from './dtos/thread-run-create.js';
 import { TraceReadResponse } from './dtos/trace-read.js';
 import {
@@ -78,6 +79,7 @@ import { RUNS_QUOTA_DAILY } from '@/config.js';
 import { dayjs, getLatestDailyFixedTime } from '@/utils/datetime.js';
 import { updateRateLimitHeadersWithDailyQuota } from '@/utils/rate-limit.js';
 import { UserCall } from '@/tools/entities/tool-calls/user-call.entity.js';
+import { Agent } from '@/runs/execution/constants.js';
 
 export async function assertRunsQuota(newRuns = 1) {
   const count = await ORM.em.getRepository(Run).count({
@@ -253,7 +255,11 @@ export async function createRun({
     await withPublisher(run, async (publish) => {
       try {
         await publish({ event: 'thread.run.created', data: toRunDto(run) });
-        await queue.add(QueueName.RUNS, { runId: run.id }, { jobId: run.id });
+        if (run.assistant.getProperty('agent') == Agent.LANGGRAPH) {
+          await lgqueue.add(QueueName.RUNS_LANGGRAPH, { runId: run.id }, { jobId: run.id });
+        } else {
+          await queue.add(QueueName.RUNS, { runId: run.id }, { jobId: run.id });
+        }
         await publish({ event: 'thread.run.queued', data: toRunDto(run) });
       } catch (err) {
         getRunsLogger(run.id).error({ err }, 'Failed to create run job');
